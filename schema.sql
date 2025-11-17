@@ -1,365 +1,337 @@
-CREATE DATABASE IF NOT EXISTS bd_stop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE bd_stop;
---
---
--- Banco de dados: `bd_stop`
---
+CREATE DATABASE sistema_vendas7 ;
+USE sistema_vendas7;
 
--- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `auditoria` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `data_hora` datetime NOT NULL,
+  `usuario_id` int NOT NULL,
+  `acao` varchar(100) NOT NULL,
+  `descricao` text,
+  `tabela_afetada` varchar(50) DEFAULT NULL,
+  `registro_id` int DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `usuario_id` (`usuario_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=431 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Estrutura da tabela `categorias`
---
+INSERT INTO `auditoria` (`id`, `data_hora`, `usuario_id`, `acao`, `descricao`, `tabela_afetada`, `registro_id`, `ip_address`) VALUES
+(1, '2025-11-03 21:40:14', 1, 'LOGIN', 'Login no sistema', '', NULL, NULL),
+(430, '2025-11-14 23:49:19', 4, 'LOGIN', 'Login no PDV 1', '', NULL, NULL);
 
-DROP TABLE IF EXISTS `categorias`;
+
+CREATE TABLE IF NOT EXISTS `caixa` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `ponto_venda_id` int NOT NULL,
+  `data_abertura` datetime NOT NULL,
+  `data_fecho` datetime DEFAULT NULL,
+  `operador_id` int NOT NULL,
+  `supervisor_abertura_id` int DEFAULT NULL,
+  `supervisor_fecho_id` int DEFAULT NULL,
+  `saldo_inicial` decimal(10,2) NOT NULL,
+  `saldo_final` decimal(10,2) DEFAULT NULL,
+  `total_vendas` decimal(10,2) DEFAULT '0.00',
+  `total_entradas` decimal(10,2) DEFAULT '0.00',
+  `total_saidas` decimal(10,2) DEFAULT '0.00',
+  `status` enum('ABERTO','FECHADO') DEFAULT 'ABERTO',
+  `observacoes` text,
+  PRIMARY KEY (`id`),
+  KEY `operador_id` (`operador_id`),
+  KEY `supervisor_abertura_id` (`supervisor_abertura_id`),
+  KEY `supervisor_fecho_id` (`supervisor_fecho_id`),
+  KEY `ponto_venda_id` (`ponto_venda_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `caixa` (`id`, `ponto_venda_id`, `data_abertura`, `data_fecho`, `operador_id`, `supervisor_abertura_id`, `supervisor_fecho_id`, `saldo_inicial`, `saldo_final`, `total_vendas`, `total_entradas`, `total_saidas`, `status`, `observacoes`) VALUES
+(1, 0, '2025-11-03 21:40:24', '2025-11-11 22:11:35', 1, 1, NULL, 10000.00, 10000.00, 228.08, 0.00, 0.00, 'FECHADO', NULL),
+(9, 0, '2025-11-14 20:28:42', NULL, 3, 5, NULL, 0.00, NULL, 0.00, 0.00, 0.00, 'ABERTO', NULL);
+
+
+CREATE TABLE IF NOT EXISTS `cartoes_cliente` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `numero_cartao` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cliente_id` int NOT NULL,
+  `senha_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `saldo` decimal(10,2) DEFAULT '0.00',
+  `data_emissao` datetime DEFAULT CURRENT_TIMESTAMP,
+  `data_validade` date DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `numero_cartao` (`numero_cartao`),
+  KEY `cliente_id` (`cliente_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `cartoes_cliente` (`id`, `numero_cartao`, `cliente_id`, `senha_hash`, `saldo`, `data_emissao`, `data_validade`, `ativo`) VALUES
+(1, '0654251128461173', 4, '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 199511.50, '2025-11-10 20:59:49', '2027-11-10', 1);
+
 CREATE TABLE IF NOT EXISTS `categorias` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nome` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descricao` text COLLATE utf8mb4_unicode_ci,
+  `nome` varchar(100) NOT NULL,
+  `descricao` text,
   `ativo` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Extraindo dados da tabela `categorias`
---
+) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO `categorias` (`id`, `nome`, `descricao`, `ativo`) VALUES
 (1, 'Alimentos', NULL, 1),
-(2, 'Laticínios', NULL, 1),
+(2, 'Bebidas', NULL, 1),
 (3, 'Limpeza', NULL, 1),
 (4, 'Higiene', NULL, 1),
-(5, 'Bebidas', NULL, 1),
-(6, 'Padaria', NULL, 1);
+(5, 'Outros', NULL, 1),
+(6, 'Alimentos', 'Produtos alimentícios em geral', 1),
+(7, 'Bebidas', 'Bebidas diversas', 1),
+(8, 'Limpeza', 'Produtos de limpeza', 1),
+(9, 'Higiene', 'Produtos de higiene pessoal', 1),
+(10, 'Padaria', 'Pães, bolos e salgados', 1),
+(11, 'Frios', 'Queijos, presuntos e frios', 1),
+(12, 'Hortifruti', 'Frutas, verduras e legumes', 1),
+(13, 'Bazar', 'Produtos diversos para casa', 1),
+(14, 'Carnes', 'Carnes bovinas, suínas e aves', 1),
+(15, 'Laticínios', 'Leite, iogurte e derivados', 1);
 
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `formas_pagamento`
---
-
-DROP TABLE IF EXISTS `formas_pagamento`;
-CREATE TABLE IF NOT EXISTS `formas_pagamento` (
+CREATE TABLE IF NOT EXISTS `clientes` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nome` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `telefone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `endereco` text,
+  `data_cadastro` datetime DEFAULT CURRENT_TIMESTAMP,
+  `cadastrado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `cadastrado_por` (`cadastrado_por`)
+) ENGINE=MyISAM AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+INSERT INTO `clientes` (`id`, `nome`, `telefone`, `email`, `endereco`, `data_cadastro`, `cadastrado_por`) VALUES
+(1, 'João da Silva', '(11) 99999-1111', 'joao.silva@email.com', 'Rua A, 123 - Centro', '2025-11-03 23:36:56', 1),
+(2, 'Maria Oliveira', '(11) 99999-2222', 'maria.oliveira@email.com', 'Av. B, 456 - Jardim', '2025-11-03 23:36:56', 1),
+(3, 'Pedro Santos', '(11) 99999-3333', 'pedro.santos@email.com', 'Rua C, 789 - Vila Nova', '2025-11-03 23:36:56', 1),
+(4, 'Ana Costa', '(11) 99999-4444', 'ana.costa@email.com', 'Alameda D, 321 - Centro', '2025-11-03 23:36:56', 1);
+
+CREATE TABLE IF NOT EXISTS `fornecedores` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nome` varchar(100) NOT NULL,
+  `telefone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `endereco` text,
   `ativo` tinyint(1) DEFAULT '1',
-  `requer_troco` tinyint(1) DEFAULT '0',
-  `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Extraindo dados da tabela `formas_pagamento`
---
+INSERT INTO `fornecedores` (`id`, `nome`, `telefone`, `email`, `endereco`, `ativo`) VALUES
+(1, 'Distribuidora Alimentícia Ltda', '(11) 3333-4444', 'vendas@distralim.com.br', 'Rua das Indústrias, 100 - SP', 1),
+(2, 'Bebidas do Brasil S.A.', '(11) 5555-6666', 'contato@bebidasbrasil.com', 'Av. das Nações, 500 - SP', 1),
+(3, 'Limpeza Total Indústria', '(11) 7777-8888', 'vendas@limpezatotal.com', 'Rua da Limpeza, 250 - SP', 1),
+(4, 'Higiene Pura Ltda', '(11) 9999-0000', 'contato@higienepura.com', 'Alameda da Saúde, 75 - SP', 1),
+(5, 'Padaria Pão Quente', '(11) 2222-3333', 'paoquente@padaria.com', 'Rua dos Padeiros, 33 - SP', 1);
 
-INSERT INTO `formas_pagamento` (`id`, `nome`, `ativo`, `requer_troco`, `data_criacao`) VALUES
-(1, 'DINHEIRO', 1, 1, '2025-11-16 16:31:23'),
-(2, 'CARTÃO DÉBITO', 1, 0, '2025-11-16 16:31:23'),
-(3, 'CARTÃO CRÉDITO', 1, 0, '2025-11-16 16:31:23'),
-(4, 'PIX', 1, 0, '2025-11-16 16:31:23'),
-(5, 'TRANSFERÊNCIA', 1, 0, '2025-11-16 16:31:23');
-
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `itens_venda`
---
-
-DROP TABLE IF EXISTS `itens_venda`;
 CREATE TABLE IF NOT EXISTS `itens_venda` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `venda_id` int DEFAULT NULL,
-  `produto_id` int DEFAULT NULL,
-  `quantidade` decimal(10,3) NOT NULL,
+  `venda_id` int NOT NULL,
+  `produto_id` int NOT NULL,
+  `quantidade` int NOT NULL,
   `preco_unitario` decimal(10,2) NOT NULL,
-  `iva_taxa` decimal(5,2) NOT NULL,
-  `iva_valor` decimal(10,2) NOT NULL,
   `subtotal` decimal(10,2) NOT NULL,
+  `cancelado` tinyint(1) DEFAULT '0',
+  `motivo_cancelamento` text,
+  `cancelado_por` int DEFAULT NULL,
+  `data_cancelamento` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `venda_id` (`venda_id`),
-  KEY `produto_id` (`produto_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `produto_id` (`produto_id`),
+  KEY `cancelado_por` (`cancelado_por`)
+) ENGINE=MyISAM AUTO_INCREMENT=282 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Extraindo dados da tabela `itens_venda`
---
+INSERT INTO `itens_venda` (`id`, `venda_id`, `produto_id`, `quantidade`, `preco_unitario`, `subtotal`, `cancelado`, `motivo_cancelamento`, `cancelado_por`, `data_cancelamento`) VALUES
+(1, 1, 31, 1, 5.90, 5.90, 0, NULL, NULL, NULL),
+(2, 1, 3, 1, 4.20, 4.20, 0, NULL, NULL, NULL),
+(281, 69, 33, 1, 4.90, 4.90, 0, NULL, NULL, NULL);
 
-INSERT INTO `itens_venda` (`id`, `venda_id`, `produto_id`, `quantidade`, `preco_unitario`, `iva_taxa`, `iva_valor`, `subtotal`) VALUES
-(1, 1, 1, 1.000, 2890.00, 7.00, 202.30, 2890.00),
-(2, 1, 2, 1.000, 950.00, 7.00, 66.50, 950.00),
-(3, 2, 1, 1.000, 2890.00, 7.00, 202.30, 2890.00),
-(4, 2, 2, 2.000, 950.00, 7.00, 133.00, 1900.00),
-(5, 2, 3, 2.000, 2580.00, 7.00, 361.20, 5160.00),
-(6, 2, 5, 1.000, 520.00, 7.00, 36.40, 520.00),
-(7, 2, 8, 1.000, 1230.00, 7.00, 86.10, 1230.00),
-(8, 2, 9, 1.000, 350.00, 7.00, 24.50, 350.00),
-(9, 3, 1, 1.000, 2890.00, 7.00, 202.30, 2890.00),
-(10, 3, 2, 2.000, 950.00, 7.00, 133.00, 1900.00),
-(11, 3, 8, 2.000, 1230.00, 14.00, 344.40, 2460.00),
-(12, 4, 1, 1.000, 2890.00, 7.00, 202.30, 2890.00),
-(13, 4, 2, 2.000, 950.00, 7.00, 133.00, 1900.00),
-(14, 4, 8, 2.000, 1230.00, 14.00, 344.40, 2460.00);
-
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `iva`
---
-
-DROP TABLE IF EXISTS `iva`;
-CREATE TABLE IF NOT EXISTS `iva` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `taxa` decimal(5,2) NOT NULL,
-  `descricao` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ativo` tinyint(1) DEFAULT '1',
-  `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Extraindo dados da tabela `iva`
---
-
-INSERT INTO `iva` (`id`, `taxa`, `descricao`, `ativo`, `data_criacao`) VALUES
-(1, 0.00, 'Isento', 1, '2025-11-16 16:31:23'),
-(2, 1.00, 'IVA 1%', 1, '2025-11-16 16:31:23'),
-(3, 7.00, 'IVA 7%', 1, '2025-11-16 16:31:23'),
-(4, 14.00, 'IVA 14%', 1, '2025-11-16 16:31:23');
-
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `logs_sistema`
---
-
-DROP TABLE IF EXISTS `logs_sistema`;
-CREATE TABLE IF NOT EXISTS `logs_sistema` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `usuario_id` int DEFAULT NULL,
-  `acao` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descricao` text COLLATE utf8mb4_unicode_ci,
-  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `data_hora` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `usuario_id` (`usuario_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `movimentos_caixa`
---
-
-DROP TABLE IF EXISTS `movimentos_caixa`;
 CREATE TABLE IF NOT EXISTS `movimentos_caixa` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `usuario_id` int DEFAULT NULL,
-  `tipo` enum('abertura','fechamento','suprimento','sangria') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `valor` decimal(10,2) NOT NULL,
-  `observacoes` text COLLATE utf8mb4_unicode_ci,
+  `caixa_id` int NOT NULL,
   `data_hora` datetime NOT NULL,
-  `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `usuario_id` (`usuario_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `pagamentos_venda`
---
-
-DROP TABLE IF EXISTS `pagamentos_venda`;
-CREATE TABLE IF NOT EXISTS `pagamentos_venda` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `venda_id` int NOT NULL,
-  `forma_pagamento` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo` enum('ENTRADA','SAIDA','OBSERVACAO') NOT NULL,
+  `descricao` varchar(200) DEFAULT NULL,
   `valor` decimal(10,2) NOT NULL,
-  `valor_pago` decimal(10,2) NOT NULL,
-  `troco` decimal(10,2) DEFAULT '0.00',
-  `data_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `forma_pagamento` varchar(50) DEFAULT NULL,
+  `autorizado_por` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `venda_id` (`venda_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `caixa_id` (`caixa_id`),
+  KEY `autorizado_por` (`autorizado_por`)
+) ENGINE=MyISAM AUTO_INCREMENT=88 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Extraindo dados da tabela `pagamentos_venda`
---
+INSERT INTO `movimentos_caixa` (`id`, `caixa_id`, `data_hora`, `tipo`, `descricao`, `valor`, `forma_pagamento`, `autorizado_por`) VALUES
+(1, 3, '2025-11-04 14:55:48', 'ENTRADA', 'VENDA #000001', 11.00, 'DINHEIRO', NULL),
+(2, 3, '2025-11-04 14:56:06', 'ENTRADA', 'VENDA #000002', 10.10, 'CARTÃO DÉBITO', NULL),
+(87, 9, '2025-11-14 20:38:10', 'SAIDA', 'SANGRIA - DINHEIRO', 50.00, 'DINHEIRO', NULL);
 
-INSERT INTO `pagamentos_venda` (`id`, `venda_id`, `forma_pagamento`, `valor`, `valor_pago`, `troco`, `data_registro`) VALUES
-(1, 3, 'DINHEIRO', 7250.00, 8000.00, 750.00, '2025-11-16 23:21:04'),
-(2, 4, 'DINHEIRO', 7250.00, 8000.00, 750.00, '2025-11-16 23:21:36');
+CREATE TABLE IF NOT EXISTS `movimentos_cartao` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `cartao_id` int NOT NULL,
+  `data_hora` datetime NOT NULL,
+  `tipo` enum('CARREGAMENTO','PAGAMENTO','CONSULTA') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descricao` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `valor` decimal(10,2) NOT NULL,
+  `saldo_anterior` decimal(10,2) DEFAULT NULL,
+  `saldo_posterior` decimal(10,2) DEFAULT NULL,
+  `operador_id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `cartao_id` (`cartao_id`),
+  KEY `operador_id` (`operador_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
+INSERT INTO `movimentos_cartao` (`id`, `cartao_id`, `data_hora`, `tipo`, `descricao`, `valor`, `saldo_anterior`, `saldo_posterior`, `operador_id`) VALUES
+(1, 1, '2025-11-10 21:01:25', 'CARREGAMENTO', 'Carregamento via caixa', 200000.00, 0.00, 200000.00, 1),
+(2, 1, '2025-11-10 21:02:42', 'CONSULTA', 'Consulta de saldo', 0.00, 200000.00, 200000.00, NULL),
+(3, 1, '2025-11-10 21:04:21', 'PAGAMENTO', 'Pagamento de compra', 89.40, 200000.00, 199910.60, 1),
+(9, 1, '2025-11-10 22:48:55', 'CONSULTA', 'Consulta de saldo', 0.00, 199816.30, 199816.30, NULL),
+(15, 1, '2025-11-13 22:02:28', 'PAGAMENTO', 'Pagamento de compra', 109.70, 199621.20, 199511.50, 4);
 
---
--- Estrutura da tabela `pontos_venda`
---
-
-DROP TABLE IF EXISTS `pontos_venda`;
 CREATE TABLE IF NOT EXISTS `pontos_venda` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `nome` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `localizacao` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `impressora` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `numero_caixa` int NOT NULL,
+  `descricao_caixa` varchar(100) NOT NULL,
+  `localizacao` varchar(200) DEFAULT NULL,
   `ativo` tinyint(1) DEFAULT '1',
-  `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `data_atualizacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `data_cadastro` datetime DEFAULT CURRENT_TIMESTAMP,
+  `cadastrado_por` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `nome` (`nome`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `numero_caixa` (`numero_caixa`),
+  KEY `cadastrado_por` (`cadastrado_por`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Extraindo dados da tabela `pontos_venda`
---
+INSERT INTO `pontos_venda` (`id`, `numero_caixa`, `descricao_caixa`, `localizacao`, `ativo`, `data_cadastro`, `cadastrado_por`) VALUES
+(1, 1, 'Caixa Principal', 'Loja Centro', 1, '2025-11-14 20:19:39', NULL);
 
-INSERT INTO `pontos_venda` (`id`, `nome`, `localizacao`, `impressora`, `ativo`, `data_criacao`, `data_atualizacao`) VALUES
-(1, 'PDV Principal', 'Loja Central', 'USB001', 1, '2025-11-16 21:52:09', '2025-11-16 21:52:09'),
-(2, 'PDV Secundário', 'Piso 1 - Secção Eletrónica', 'USB002', 1, '2025-11-16 21:52:09', '2025-11-16 21:52:09'),
-(3, 'PDV Restauração', 'Piso 2 - Área de Restauração', 'USB003', 1, '2025-11-16 21:52:09', '2025-11-16 21:52:09');
-
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `produtos`
---
-
-DROP TABLE IF EXISTS `produtos`;
 CREATE TABLE IF NOT EXISTS `produtos` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `codigo` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nome` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `codigo` varchar(50) NOT NULL,
+  `nome` varchar(200) NOT NULL,
+  `descricao` text,
   `preco` decimal(10,2) NOT NULL,
   `preco_custo` decimal(10,2) DEFAULT NULL,
   `estoque` int DEFAULT '0',
-  `estoque_minimo` int DEFAULT '0',
+  `estoque_minimo` int DEFAULT '5',
   `categoria_id` int DEFAULT NULL,
-  `iva_id` int DEFAULT NULL,
-  `peso_bruto` decimal(10,3) DEFAULT NULL,
-  `unidade_medida` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fornecedor_id` int DEFAULT NULL,
   `ativo` tinyint(1) DEFAULT '1',
-  `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `data_atualizacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `data_cadastro` datetime DEFAULT CURRENT_TIMESTAMP,
+  `cadastrado_por` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `codigo` (`codigo`),
   KEY `categoria_id` (`categoria_id`),
-  KEY `iva_id` (`iva_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `fornecedor_id` (`fornecedor_id`),
+  KEY `cadastrado_por` (`cadastrado_por`)
+) ENGINE=MyISAM AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Extraindo dados da tabela `produtos`
---
+INSERT INTO `produtos` (`id`, `codigo`, `nome`, `descricao`, `preco`, `preco_custo`, `estoque`, `estoque_minimo`, `categoria_id`, `fornecedor_id`, `ativo`, `data_cadastro`, `cadastrado_por`) VALUES
+(1, 'ARROZ001', 'Arroz Branco 5kg', 'Arroz tipo 1, pacote 5kg', 22.90, 15.50, 61, 10, 1, 1, 1, '2025-11-03 23:36:56', 1),
+(2, 'FEIJAO001', 'Feijão Carioca 1kg', 'Feijão carioca tipo 1', 8.50, 5.20, 131, 20, 1, 1, 1, '2025-11-03 23:36:56', 1),
+(3, 'ACUCAR001', 'Açúcar Refinado 1kg', 'Açúcar cristal refinado', 4.20, 2.50, 184, 30, 1, 1, 1, '2025-11-03 23:36:56', 1),
+(4, 'CAFE001', 'Café em Pó 500g', 'Café torrado e moído', 18.90, 12.00, 70, 15, 1, 1, 1, '2025-11-03 23:36:56', 1),
+(5, 'OLEO001', 'Óleo de Soja 900ml', 'Óleo de soja refinado', 7.80, 4.50, 120, 25, 1, 1, 1, '2025-11-03 23:36:56', 1),
+(6, 'FARINHA001', 'Farinha de Trigo 1kg', 'Farinha de trigo especial', 5.90, 3.20, 88, 20, 1, 1, 1, '2025-11-03 23:36:56', 1),
+(7, 'SAL001', 'Sal Refinado 1kg', 'Sal refinado iodado', 3.50, 1.80, 179, 40, 1, 1, 1, '2025-11-03 23:36:56', 1),
+(8, 'REFRIG001', 'Refrigerante Cola 2L', 'Refrigerante sabor cola', 8.90, 5.00, 59, 15, 2, 2, 1, '2025-11-03 23:36:56', 1),
+(9, 'SUCO001', 'Suco de Laranja 1L', 'Suco integral de laranja', 9.50, 6.00, 44, 10, 2, 2, 1, '2025-11-03 23:36:56', 1),
+(10, '4897057900065', 'Água Mineral 500ml', 'Água mineral sem gás', 40.50, 1.20, 194, 50, 2, 2, 1, '2025-11-03 23:36:56', 1),
+(48, 'CERVEJA002', 'Cerveja IPA 350ml', 'Cerveja artesanal IPA', 12.90, 8.00, 8, 8, 2, 2, 1, '2025-11-03 23:36:56', 1);
 
-INSERT INTO `produtos` (`id`, `codigo`, `nome`, `preco`, `preco_custo`, `estoque`, `estoque_minimo`, `categoria_id`, `iva_id`, `peso_bruto`, `unidade_medida`, `ativo`, `data_criacao`, `data_atualizacao`) VALUES
-(1, '001', 'Arroz Integral 5kg', 2890.00, 2200.00, 46, 0, 1, 3, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 23:21:36'),
-(2, '002', 'Feijão Carioca 1kg', 950.00, 700.00, 93, 0, 1, 3, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 23:21:36'),
-(3, '003', 'Azeite Extra Virgem 500ml', 2580.00, 1900.00, 28, 0, 1, 3, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 22:49:54'),
-(4, '4897057900065', 'Café Gourmet 500g', 2250.00, 1600.00, 40, 0, 1, 3, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 22:12:30'),
-(5, '005', 'Leite Integral 1L', 520.00, 380.00, 119, 0, 2, 3, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 22:49:54'),
-(6, '006', 'Queijo Mussarela 1kg', 1890.00, 1400.00, 25, 0, 2, 3, NULL, 'kg', 1, '2025-11-16 16:31:23', '2025-11-16 16:31:23'),
-(7, '007', 'Iogurte Natural 200g', 850.00, 600.00, 60, 0, 2, 3, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 16:31:23'),
-(8, '008', 'Sabonete Líquido 500ml', 1230.00, 900.00, 40, 0, 4, 4, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 23:21:36'),
-(9, '009', 'Detergente 500ml', 350.00, 250.00, 79, 0, 3, 3, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 22:49:54'),
-(10, '010', 'Shampoo Antiqueda 400ml', 3290.00, 2400.00, 35, 0, 4, 3, NULL, 'un', 1, '2025-11-16 16:31:23', '2025-11-16 16:31:23');
-
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `sessoes_usuarios`
---
-
-DROP TABLE IF EXISTS `sessoes_usuarios`;
-CREATE TABLE IF NOT EXISTS `sessoes_usuarios` (
+CREATE TABLE IF NOT EXISTS `promocoes` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `usuario_id` int NOT NULL,
-  `ponto_venda_id` int NOT NULL,
-  `data_login` datetime NOT NULL,
-  `data_ultima_acao` datetime NOT NULL,
-  `endereco_ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `token_sessao` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ativa` tinyint(1) DEFAULT '1',
+  `nome` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descricao` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `tipo` enum('PERCENTUAL','VALOR_FIXO','COMPRE_X_LEVE_Y','DESCONTO_POR_QUANTIDADE') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `valor` decimal(10,2) DEFAULT NULL,
+  `produto_alvo_id` int DEFAULT NULL,
+  `categoria_alvo_id` int DEFAULT NULL,
+  `produtos_aplicaveis` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `data_inicio` date NOT NULL,
+  `data_fim` date NOT NULL,
+  `ativo` tinyint(1) DEFAULT '1',
+  `quantidade_x` int DEFAULT '1',
+  `quantidade_y` int DEFAULT '1',
+  `quantidade_minima` int DEFAULT '1',
+  `criado_por` int DEFAULT NULL,
+  `data_criacao` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `token_sessao` (`token_sessao`),
-  KEY `ponto_venda_id` (`ponto_venda_id`),
-  KEY `idx_sessoes_usuario` (`usuario_id`,`ativa`),
-  KEY `idx_sessoes_token` (`token_sessao`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `produto_alvo_id` (`produto_alvo_id`),
+  KEY `categoria_alvo_id` (`categoria_alvo_id`),
+  KEY `criado_por` (`criado_por`)
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Extraindo dados da tabela `sessoes_usuarios`
---
+INSERT INTO `promocoes` (`id`, `nome`, `descricao`, `tipo`, `valor`, `produto_alvo_id`, `categoria_alvo_id`, `produtos_aplicaveis`, `data_inicio`, `data_fim`, `ativo`, `quantidade_x`, `quantidade_y`, `quantidade_minima`, `criado_por`, `data_criacao`) VALUES
+(1, 'test', 'test', 'PERCENTUAL', 10.00, 2, 2, NULL, '0000-00-00', '0000-00-00', 0, 1, 1, 1, NULL, '2025-11-10 23:03:30'),
+(2, 'Promoção Geral 10% OFF', 'Desconto de 10% em todos os produtos da loja', 'PERCENTUAL', 10.00, NULL, NULL, NULL, '2025-11-10', '2025-12-10', 0, 1, 1, 1, 1, '2025-11-10 23:04:37'),
+(11, 'Desconto Produto B', 'Promoção especial', 'VALOR_FIXO', 2.00, 2, NULL, NULL, '2025-11-10', '2025-12-10', 1, 1, 1, 1, 1, '2025-11-10 23:12:39'),
+(12, 'Promoção Categoria X', 'Desconto na categoria', 'PERCENTUAL', 15.00, NULL, 1, NULL, '2025-11-10', '2025-12-10', 0, 1, 1, 1, 1, '2025-11-10 23:12:39'),
+(13, 'Leve 2 Pague 1', 'Promoção compre 2 leve 1', 'COMPRE_X_LEVE_Y', NULL, 3, NULL, NULL, '2025-11-10', '2025-12-10', 0, 2, 1, 1, 1, '2025-11-10 23:12:40'),
+(14, 'Leve 3 Pague 2', 'Promoção compre 3 leve 2', 'COMPRE_X_LEVE_Y', NULL, 4, NULL, NULL, '2025-11-10', '2025-12-10', 0, 3, 2, 1, 1, '2025-11-10 23:12:40');
 
-INSERT INTO `sessoes_usuarios` (`id`, `usuario_id`, `ponto_venda_id`, `data_login`, `data_ultima_acao`, `endereco_ip`, `token_sessao`, `ativa`) VALUES
-(1, 4, 1, '2025-11-16 23:10:59', '2025-11-16 23:13:53', NULL, 'SESSION_4_1763331059', 0),
-(2, 1, 1, '2025-11-16 23:14:31', '2025-11-16 23:14:31', NULL, 'SESSION_1_1763331271', 0),
-(3, 4, 1, '2025-11-16 23:15:47', '2025-11-16 23:43:45', NULL, 'SESSION_4_1763331347', 0),
-(4, 4, 1, '2025-11-16 23:46:23', '2025-11-16 23:49:44', NULL, 'SESSION_4_1763333183', 1);
+CREATE TABLE IF NOT EXISTS `promocoes_aplicadas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `venda_id` int NOT NULL,
+  `promocao_id` int NOT NULL,
+  `produto_id` int NOT NULL,
+  `valor_desconto` decimal(10,2) NOT NULL,
+  `quantidade` int NOT NULL,
+  `data_aplicacao` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `venda_id` (`venda_id`),
+  KEY `promocao_id` (`promocao_id`),
+  KEY `produto_id` (`produto_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `usuarios`
---
-
-DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE IF NOT EXISTS `usuarios` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `numero_trabalhador` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nome` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `senha` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nivel` enum('admin','gerente','supervisor','operador') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `numero_trabalhador` varchar(20) NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `senha_hash` varchar(255) NOT NULL,
+  `nivel_acesso` enum('OPERADOR','SUPERVISOR','ADMIN') DEFAULT 'OPERADOR',
   `ativo` tinyint(1) DEFAULT '1',
-  `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `data_cadastro` datetime DEFAULT CURRENT_TIMESTAMP,
+  `ultimo_login` datetime DEFAULT NULL,
+  `criado_por` int DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `numero_trabalhador` (`numero_trabalhador`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `numero_trabalhador` (`numero_trabalhador`),
+  KEY `criado_por` (`criado_por`)
+) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Extraindo dados da tabela `usuarios`
---
+INSERT INTO `usuarios` (`id`, `numero_trabalhador`, `nome`, `senha_hash`, `nivel_acesso`, `ativo`, `data_cadastro`, `ultimo_login`, `criado_por`) VALUES
+(1, '00001', 'Administrador', '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5', 'ADMIN', 1, '2025-11-03 21:12:19', '2025-11-14 20:05:38', NULL),
+(2, '00002', 'Supervisor João Silva', '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5', 'SUPERVISOR', 1, '2025-11-03 23:36:56', NULL, NULL),
+(3, '00003', 'Operadora Maria Santos', '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5', 'OPERADOR', 1, '2025-11-03 23:36:56', '2025-11-14 21:13:54', NULL),
+(4, '00004', 'Operador Pedro Oliveira', '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5', 'OPERADOR', 1, '2025-11-03 23:36:56', '2025-11-14 23:49:19', NULL),
+(5, '00005', 'Supervisora Ana Costa', '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5', 'SUPERVISOR', 1, '2025-11-03 23:36:56', NULL, NULL),
+(6, '00007', 'Paulo', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'OPERADOR', 1, '2025-11-12 00:35:11', NULL, 1),
+(7, '00006', 'Miguel ant', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'SUPERVISOR', 1, '2025-11-12 00:35:41', NULL, 1),
+(8, '00009', 'santos', '12345', 'SUPERVISOR', 1, '2025-11-13 19:52:18', NULL, NULL);
 
-INSERT INTO `usuarios` (`id`, `numero_trabalhador`, `nome`, `senha`, `nivel`, `ativo`, `data_criacao`) VALUES
-(1, '0001', 'Administrador', '827ccb0eea8a706c4c34a16891f84e7b', 'admin', 1, '2025-11-16 16:31:23'),
-(2, '0002', 'Gerente Geral', '827ccb0eea8a706c4c34a16891f84e7b', 'gerente', 1, '2025-11-16 16:31:23'),
-(3, '0003', 'Supervisor', '827ccb0eea8a706c4c34a16891f84e7b', 'supervisor', 1, '2025-11-16 16:31:23'),
-(4, '0004', 'Operador Caixa', '827ccb0eea8a706c4c34a16891f84e7b', 'operador', 1, '2025-11-16 16:31:23');
 
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `vendas`
---
-
-DROP TABLE IF EXISTS `vendas`;
 CREATE TABLE IF NOT EXISTS `vendas` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `numero_venda` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `usuario_id` int DEFAULT NULL,
   `data_hora` datetime NOT NULL,
   `total` decimal(10,2) NOT NULL,
-  `total_iva` decimal(10,2) NOT NULL,
+  `forma_pagamento` text,
+  `valor_pago` decimal(10,2) DEFAULT NULL,
+  `troco` decimal(10,2) DEFAULT NULL,
+  `operador_id` int NOT NULL,
+  `supervisor_id` int DEFAULT NULL,
+  `cliente_id` int DEFAULT NULL,
   `desconto` decimal(10,2) DEFAULT '0.00',
-  `estado` enum('pendente','finalizada','cancelada') COLLATE utf8mb4_unicode_ci DEFAULT 'finalizada',
-  `observacoes` text COLLATE utf8mb4_unicode_ci,
-  `ponto_venda_id` int DEFAULT '1',
-  `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('FINALIZADA','CANCELADA','PENDENTE') DEFAULT 'FINALIZADA',
+  `motivo_cancelamento` text,
+  `cancelado_por` int DEFAULT NULL,
+  `data_cancelamento` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `numero_venda` (`numero_venda`),
-  KEY `usuario_id` (`usuario_id`),
-  KEY `fk_vendas_ponto_venda` (`ponto_venda_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `operador_id` (`operador_id`),
+  KEY `supervisor_id` (`supervisor_id`),
+  KEY `cliente_id` (`cliente_id`),
+  KEY `cancelado_por` (`cancelado_por`)
+) ENGINE=MyISAM AUTO_INCREMENT=70 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Extraindo dados da tabela `vendas`
---
+INSERT INTO `vendas` (`id`, `data_hora`, `total`, `forma_pagamento`, `valor_pago`, `troco`, `operador_id`, `supervisor_id`, `cliente_id`, `desconto`, `status`, `motivo_cancelamento`, `cancelado_por`, `data_cancelamento`) VALUES
+(1, '2025-11-04 14:55:48', 10.10, 'DINHEIRO: R$ 11.00', 11.00, 0.90, 1, NULL, NULL, 0.00, 'CANCELADA', 'erro', 1, '2025-11-04 14:58:36'),
+(2, '2025-11-04 14:56:06', 10.10, 'CARTÃO DÉBITO: R$ 10.10', 10.10, 0.00, 1, NULL, NULL, 0.00, 'FINALIZADA', NULL, NULL, NULL),
+(69, '2025-11-14 20:30:05', 30.70, 'DINHEIRO: R$ 31.00', 31.00, 0.30, 3, NULL, NULL, 0.00, 'FINALIZADA', NULL, NULL, NULL);
 
-INSERT INTO `vendas` (`id`, `numero_venda`, `usuario_id`, `data_hora`, `total`, `total_iva`, `desconto`, `estado`, `observacoes`, `ponto_venda_id`, `data_criacao`) VALUES
-(1, NULL, 4, '2025-11-16 23:47:13', 3840.00, 268.80, 0.00, 'finalizada', NULL, 1, '2025-11-16 22:47:13'),
-(2, NULL, 4, '2025-11-16 23:49:54', 12050.00, 843.50, 0.00, 'finalizada', NULL, 1, '2025-11-16 22:49:54'),
-(3, NULL, 3, '2025-11-17 00:21:04', 7250.00, 679.70, 0.00, 'finalizada', NULL, 1, '2025-11-16 23:21:04'),
-(4, NULL, 3, '2025-11-17 00:21:36', 7250.00, 679.70, 0.00, 'finalizada', NULL, 1, '2025-11-16 23:21:36');
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
